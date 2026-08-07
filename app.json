@@ -8,9 +8,11 @@
     "scheme": "denguecalculator",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.wafiqamrin.dengueCalculator"
     },
     "android": {
+      "package": "com.wafiqamrin.dengueCalculator",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -32,12 +34,18 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ],
-      "expo-image"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "36f6b1b3-0b51-462c-b768-c9d7dd5fe6cb"
+      }
+    },
+    "owner": "wafiqamrin"
   }
 }
