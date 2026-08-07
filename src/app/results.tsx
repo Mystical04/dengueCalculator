@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { BmiBadge } from "@/components/bmi-badge";
 import { FluidRateSelector } from "@/components/fluid-rate-selector";
 import { PrimaryButton } from "@/components/primary-button";
 import { ResultCard } from "@/components/result-card";
@@ -12,12 +13,13 @@ import { OBESITY_BMI_THRESHOLD } from "@/constants/clinical";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { FluidRateOption, Gender } from "@/types/dengue";
 import {
-    calculateABW,
-    calculateBMI,
-    calculateFluidVolume,
-    calculateIBW,
-    getFluidBodyWeight,
-    roundTo2,
+  calculateABW,
+  calculateBMI,
+  calculateFluidVolume,
+  calculateIBW,
+  classifyBmi,
+  getFluidBodyWeight,
+  roundTo2,
 } from "@/utils/calculations";
 
 export default function ResultsScreen() {
@@ -38,9 +40,10 @@ export default function ResultsScreen() {
     const bmi = calculateBMI(weight, height);
     const ibw = calculateIBW(gender, height);
     const abw = calculateABW(weight, ibw);
+    const classification = classifyBmi(bmi);
     const { weightKg, basis } = getFluidBodyWeight(bmi, weight, abw);
 
-    return { bmi, ibw, abw, weightKg, basis };
+    return { weight, height, bmi, ibw, abw, classification, weightKg, basis };
   }, [params.weight, params.height, params.gender]);
 
   const fluidResult = selectedRate
@@ -58,44 +61,83 @@ export default function ResultsScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <ThemedText type="subtitle">Results</ThemedText>
           <ResultCard
-            title="Body Measurements"
+            title="Patient Details"
             rows={[
               {
-                label: "BMI",
-                value: `${roundTo2(calculation.bmi).toFixed(2)} kg/m\u00b2`,
+                label: "Weight",
+                value: `${roundTo2(calculation.weight).toFixed(2)} kg`,
               },
               {
-                label: "Ideal Body Weight",
-                value: `${roundTo2(calculation.ibw).toFixed(2)} kg`,
+                label: "Height",
+                value: `${roundTo2(calculation.height).toFixed(2)} cm`,
               },
             ]}
           ></ResultCard>
+
+          <ThemedView type="card" style={styles.card}>
+            <ThemedText
+              type="smallBold"
+              themeColor="textSecondary"
+              style={styles.cardTitle}
+            >
+              BODY MEASUREMENTS
+            </ThemedText>
+
+            <View style={styles.row}>
+              <ThemedText type="default">BMI</ThemedText>
+              <View style={styles.bmiValue}>
+                <ThemedText type="smallBold">
+                  {roundTo2(calculation.bmi).toFixed(2)} kg/m²
+                </ThemedText>
+                <BmiBadge
+                  classification={calculation.classification}
+                ></BmiBadge>
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <ThemedText type="default">Ideal Body Weight (IBW)</ThemedText>
+              <ThemedText type="smallBold">
+                {roundTo2(calculation.ibw).toFixed(2)} kg
+              </ThemedText>
+            </View>
+
+            <View style={styles.row}>
+              <ThemedText type="default">Adjusted Body Weight (ABW)</ThemedText>
+              <ThemedText type="smallBold">
+                {roundTo2(calculation.abw).toFixed(2)} kg
+              </ThemedText>
+            </View>
+          </ThemedView>
+
+          <ThemedText
+            type="small"
+            themeColor="textSecondary"
+            style={styles.centerText}
+          >
+            {`This patient's BMI is ${
+              calculation.basis === "abw" ? "≥" : "<"
+            } ${OBESITY_BMI_THRESHOLD}, so ${
+              calculation.basis === "abw" ? "Adjusted" : "Actual"
+            } Body Weight is used for fluid calculation.`}
+          </ThemedText>
 
           <ResultCard
             title="Fluid Calculation Weight"
             rows={[
               {
-                label:
-                  calculation.basis === "abw"
-                    ? "Adjusted Body Weight (ABW)"
-                    : "Actual Body Weight",
+                label: `Fluid Calculation Weight: ${calculation.basis === "abw" ? "ABW" : "Actual"}`,
                 value: `${roundTo2(calculation.weightKg).toFixed(2)} kg`,
               },
             ]}
           ></ResultCard>
-
-          <ThemedText type="small" themeColor="textSecondary">
-            {calculation.basis === "abw"
-              ? `BMI is \u2265 ${OBESITY_BMI_THRESHOLD}, SO Adjusted Body Weight is used for fluid calculation.`
-              : `BMI is < ${OBESITY_BMI_THRESHOLD}, so Actual Body Weight is used for fluid calculation.`}
-          </ThemedText>
 
           <ThemedView style={styles.section}>
             <ThemedText type="smallBold">Select Fluid Rate</ThemedText>
             <FluidRateSelector
               selectedId={selectedRate?.id ?? null}
               onSelect={setSelectedRate}
-            ></FluidRateSelector>
+            />
           </ThemedView>
 
           {selectedRate && fluidResult !== null && (
@@ -104,11 +146,11 @@ export default function ResultsScreen() {
               rows={[
                 {
                   label: selectedRate.label,
-                  value: `${roundTo2(fluidResult).toFixed(2)}mL${selectedRate.mode === "hourly" ? "/hour" : ""}`,
+                  value: `${roundTo2(fluidResult).toFixed(2)} mL${selectedRate.mode === "hourly" ? "/hour" : ""}`,
                 },
                 { label: "Duration", value: selectedRate.durationLabel },
               ]}
-            ></ResultCard>
+            />
           )}
 
           <PrimaryButton
@@ -132,4 +174,17 @@ const styles = StyleSheet.create({
   },
   scrollContent: { padding: Spacing.five, gap: Spacing.four },
   section: { gap: Spacing.two },
+  card: {
+    borderRadius: Spacing.four,
+    padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  cardTitle: { marginBottom: Spacing.one, letterSpacing: 0.5 },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  bmiValue: { alignItems: "flex-end", gap: Spacing.one },
+  centerText: { textAlign: "center" },
 });

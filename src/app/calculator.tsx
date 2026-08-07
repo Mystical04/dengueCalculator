@@ -1,9 +1,5 @@
-import { router } from "expo-router";
-import { useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
 import { GenderSelector } from "@/components/gender-selector";
+import { NoticeBanner } from "@/components/notice-banner";
 import { NumericField } from "@/components/numeric-field";
 import { PrimaryButton } from "@/components/primary-button";
 import { ThemedText } from "@/components/themed-text";
@@ -16,6 +12,10 @@ import {
 } from "@/constants/clinical";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { Gender } from "@/types/dengue";
+import { router } from "expo-router";
+import { useState } from "react";
+import { ScrollView, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 function validateWeight(value: string): string | undefined {
   if (!value) return "Weight is required.";
@@ -58,6 +58,7 @@ export default function CalculatorScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <ThemedText type="subtitle">Patient Information</ThemedText>
+          <NoticeBanner message="Please double-check the measurements before proceeding. Accurate height and weight are essential for a correct calculation."></NoticeBanner>
           <ThemedView style={styles.section}>
             <ThemedText type="smallBold">Gender</ThemedText>
             <GenderSelector

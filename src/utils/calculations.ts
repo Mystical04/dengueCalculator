@@ -1,7 +1,16 @@
 // Formula per CPG Management of Dengue Infection in Adults
 
-import { OBESITY_BMI_THRESHOLD } from "@/constants/clinical";
-import { BodyWeightBasis, FluidRateOption, Gender } from "@/types/dengue";
+import {
+  BMI_OVERWEIGHT_MIN,
+  BMI_UNDERWEIGHT_MAX,
+  OBESITY_BMI_THRESHOLD,
+} from "@/constants/clinical";
+import {
+  BmiClassification,
+  BodyWeightBasis,
+  FluidRateOption,
+  Gender,
+} from "@/types/dengue";
 
 export function roundTo2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
@@ -19,6 +28,12 @@ export function calculateIBW(gender: Gender, heightCm: number): number {
 
 export function calculateABW(actualWeightKg: number, ibwKg: number): number {
   return ibwKg + 0.4 * (actualWeightKg - ibwKg);
+}
+
+export function classifyBmi(bmi: number): BmiClassification {
+  if (bmi < BMI_UNDERWEIGHT_MAX) return "underweight";
+  if (bmi >= BMI_OVERWEIGHT_MIN) return "overweight";
+  return "normal";
 }
 
 export function getFluidBodyWeight(

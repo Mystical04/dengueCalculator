@@ -11,3 +11,5 @@ export type FluidRateOption = {
 };
 
 export type BodyWeightBasis = "actual" | "abw";
+
+export type BmiClassification = "underweight" | "normal" | "overweight";
