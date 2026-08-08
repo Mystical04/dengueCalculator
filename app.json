@@ -8,13 +8,13 @@
     "scheme": "denguecalculator",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.wafiqamrin.dengueCalculator"
     },
     "android": {
       "package": "com.wafiqamrin.dengueCalculator",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#004DCF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -30,7 +30,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#2563EB",
+          "backgroundColor": "#004DCF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -43,7 +43,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "36f6b1b3-0b51-462c-b768-c9d7dd5fe6cb"
+        "projectId": "987e6900-2637-4586-a6dd-c38259be19d1"
       }
     },
     "owner": "wafiqamrin"
