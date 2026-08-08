@@ -5,12 +5,11 @@ export const WEIGHT_MAX_KG = 300;
 export const HEIGHT_MIN_CM = 100;
 export const HEIGHT_MAX_CM = 250;
 
-// Standard WHO BMI classification bands.
+// CPG Management of Dengue Infection in Adults (3rd Edition), Table 7.
 export const BMI_UNDERWEIGHT_MAX = 18.5; // BMI below this is Underweight
-export const BMI_OVERWEIGHT_MIN = 25; // BMI at/above this is Overweight
-// Between the two bounds is Normal.
-
-export const OBESITY_BMI_THRESHOLD = 27.5; // BMI at/above this uses Adjusted Body Weight for fluid calc
+export const BMI_OVERWEIGHT_MIN = 27.5; // BMI at/above this is Overweight
+// Between the two bounds is Normal. Normal/Underweight use Actual Body
+// Weight for fluid calculation; Overweight uses Adjusted Body Weight (ABW).
 
 export const FLUID_RATES: FluidRateOption[] = [
   { id: "bolus-20", label: "20 cc/kg", ccPerKg: 20, mode: "bolus", durationLabel: "within 15–30 minutes" },

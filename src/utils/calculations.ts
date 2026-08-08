@@ -3,7 +3,6 @@
 import {
   BMI_OVERWEIGHT_MIN,
   BMI_UNDERWEIGHT_MAX,
-  OBESITY_BMI_THRESHOLD,
 } from "@/constants/clinical";
 import {
   BmiClassification,
@@ -37,11 +36,11 @@ export function classifyBmi(bmi: number): BmiClassification {
 }
 
 export function getFluidBodyWeight(
-  bmi: number,
+  classification: BmiClassification,
   actualWeightKg: number,
   abwKg: number,
 ): { weightKg: number; basis: BodyWeightBasis } {
-  if (bmi >= OBESITY_BMI_THRESHOLD) {
+  if (classification === "overweight") {
     return { weightKg: abwKg, basis: "abw" };
   }
   return { weightKg: actualWeightKg, basis: "actual" };

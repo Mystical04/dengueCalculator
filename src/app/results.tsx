@@ -9,7 +9,6 @@ import { PrimaryButton } from "@/components/primary-button";
 import { ResultCard } from "@/components/result-card";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { OBESITY_BMI_THRESHOLD } from "@/constants/clinical";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { FluidRateOption, Gender } from "@/types/dengue";
 import {
@@ -21,6 +20,12 @@ import {
   getFluidBodyWeight,
   roundTo2,
 } from "@/utils/calculations";
+
+const CLASSIFICATION_LABEL = {
+  underweight: "Underweight",
+  normal: "Normal",
+  overweight: "Overweight",
+} as const;
 
 export default function ResultsScreen() {
   const params = useLocalSearchParams<{
@@ -41,7 +46,7 @@ export default function ResultsScreen() {
     const ibw = calculateIBW(gender, height);
     const abw = calculateABW(weight, ibw);
     const classification = classifyBmi(bmi);
-    const { weightKg, basis } = getFluidBodyWeight(bmi, weight, abw);
+    const { weightKg, basis } = getFluidBodyWeight(classification, weight, abw);
 
     return { weight, height, bmi, ibw, abw, classification, weightKg, basis };
   }, [params.weight, params.height, params.gender]);
@@ -115,9 +120,7 @@ export default function ResultsScreen() {
             themeColor="textSecondary"
             style={styles.centerText}
           >
-            {`This patient's BMI is ${
-              calculation.basis === "abw" ? "≥" : "<"
-            } ${OBESITY_BMI_THRESHOLD}, so ${
+            {`This patient's BMI is classified as ${CLASSIFICATION_LABEL[calculation.classification]}, so ${
               calculation.basis === "abw" ? "Adjusted" : "Actual"
             } Body Weight is used for fluid calculation.`}
           </ThemedText>
