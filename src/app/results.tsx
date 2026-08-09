@@ -7,25 +7,21 @@ import { BmiBadge } from "@/components/bmi-badge";
 import { FluidRateSelector } from "@/components/fluid-rate-selector";
 import { PrimaryButton } from "@/components/primary-button";
 import { ResultCard } from "@/components/result-card";
+import { ShockStatusSelector } from "@/components/shock-status-selector";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
-import { FluidRateOption, Gender } from "@/types/dengue";
+import { FluidRateOption, Gender, ShockStatus } from "@/types/dengue";
 import {
   calculateABW,
   calculateBMI,
   calculateFluidVolume,
   calculateIBW,
   classifyBmi,
+  getAvailableFluidRates,
   getFluidBodyWeight,
   roundTo2,
 } from "@/utils/calculations";
-
-const CLASSIFICATION_LABEL = {
-  underweight: "Underweight",
-  normal: "Normal",
-  overweight: "Overweight",
-} as const;
 
 export default function ResultsScreen() {
   const params = useLocalSearchParams<{
@@ -33,6 +29,7 @@ export default function ResultsScreen() {
     weight: string;
     height: string;
   }>();
+  const [shockStatus, setShockStatus] = useState<ShockStatus | null>(null);
   const [selectedRate, setSelectedRate] = useState<FluidRateOption | null>(
     null,
   );
@@ -51,12 +48,23 @@ export default function ResultsScreen() {
     return { weight, height, bmi, ibw, abw, classification, weightKg, basis };
   }, [params.weight, params.height, params.gender]);
 
+  const avalaibleRates = useMemo(
+    () => (shockStatus ? getAvailableFluidRates(shockStatus) : []),
+    [shockStatus],
+  );
+
   const fluidResult = selectedRate
     ? calculateFluidVolume(calculation.weightKg, selectedRate)
     : null;
 
+  function handleShockStatusChange(status: ShockStatus) {
+    setShockStatus(status);
+    setSelectedRate(null);
+  }
+
   function handleReset() {
     setSelectedRate(null);
+    setShockStatus(null);
     router.replace("/");
   }
 
@@ -91,12 +99,8 @@ export default function ResultsScreen() {
             <View style={styles.row}>
               <ThemedText type="default">BMI</ThemedText>
               <View style={styles.bmiValue}>
-                <ThemedText type="smallBold">
-                  {roundTo2(calculation.bmi).toFixed(2)} kg/m²
-                </ThemedText>
-                <BmiBadge
-                  classification={calculation.classification}
-                ></BmiBadge>
+                <ThemedText type="smallBold">{roundTo2(calculation.bmi).toFixed(2)} kg/m²</ThemedText>
+                <BmiBadge classification={calculation.classification} />
               </View>
             </View>
 
@@ -120,28 +124,42 @@ export default function ResultsScreen() {
             themeColor="textSecondary"
             style={styles.centerText}
           >
-            {`This patient's BMI is classified as ${CLASSIFICATION_LABEL[calculation.classification]}, so ${
-              calculation.basis === "abw" ? "Adjusted" : "Actual"
-            } Body Weight is used for fluid calculation.`}
+            {calculation.basis === "abw"
+              ? "BMI is above the specified threshold; hence, ABW is used for fluid calculation."
+              : "BMI is within the specified range; hence, Actual Body Weight is used for fluid calculation."}
           </ThemedText>
 
-          <ResultCard
-            title="Fluid Calculation Weight"
-            rows={[
-              {
-                label: `Fluid Calculation Weight: ${calculation.basis === "abw" ? "ABW" : "Actual"}`,
-                value: `${roundTo2(calculation.weightKg).toFixed(2)} kg`,
-              },
-            ]}
-          ></ResultCard>
+          <ThemedView type="card" style={styles.card}>
+            <ThemedText
+              type="smallBold"
+              themeColor="textSecondary"
+              style={styles.cardTitle}
+            >
+              RESULT
+            </ThemedText>
+            <ThemedText type="smallBold" style={styles.resultValue}>
+              {`${calculation.basis === "abw" ? "ABW" : "Actual Weight"}, ${roundTo2(calculation.weightKg).toFixed(2)}kg`}
+            </ThemedText>
+          </ThemedView>
 
           <ThemedView style={styles.section}>
-            <ThemedText type="smallBold">Select Fluid Rate</ThemedText>
-            <FluidRateSelector
-              selectedId={selectedRate?.id ?? null}
-              onSelect={setSelectedRate}
-            />
+            <ThemedText type="smallBold">Shock Status</ThemedText>
+            <ShockStatusSelector
+              value={shockStatus}
+              onChange={handleShockStatusChange}
+            ></ShockStatusSelector>
           </ThemedView>
+
+          {shockStatus && (
+            <ThemedView style={styles.section}>
+              <ThemedText type="smallBold">Select Fluid Rate</ThemedText>
+              <FluidRateSelector
+                rates={avalaibleRates}
+                selectedId={selectedRate?.id ?? null}
+                onSelect={setSelectedRate}
+              ></FluidRateSelector>
+            </ThemedView>
+          )}
 
           {selectedRate && fluidResult !== null && (
             <ResultCard
@@ -188,6 +206,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  bmiValue: { alignItems: "flex-end", gap: Spacing.one },
+  bmiValue: {
+    alignItems: "flex-end",
+    gap: Spacing.one,
+  },
   centerText: { textAlign: "center" },
+  resultValue: { textAlign: "center", fontSize: 20, lineHeight: 26 },
 });

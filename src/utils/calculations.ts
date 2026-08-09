@@ -3,12 +3,14 @@
 import {
   BMI_OVERWEIGHT_MIN,
   BMI_UNDERWEIGHT_MAX,
+  FLUID_RATES,
 } from "@/constants/clinical";
 import {
   BmiClassification,
   BodyWeightBasis,
   FluidRateOption,
   Gender,
+  ShockStatus,
 } from "@/types/dengue";
 
 export function roundTo2(value: number): number {
@@ -51,4 +53,11 @@ export function calculateFluidVolume(
   rate: FluidRateOption,
 ): number {
   return weightKg * rate.ccPerKg;
+}
+
+export function getAvailableFluidRates(
+  ShockStatus: ShockStatus,
+): FluidRateOption[] {
+  if (ShockStatus === "yes") return FLUID_RATES;
+  return FLUID_RATES.filter((rate) => !rate.requiresShock);
 }

@@ -3,31 +3,34 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
-import { FluidRateOption } from "@/types/dengue";
+import { ShockStatus } from "@/types/dengue";
 
-type FluidRateSelectorProps = {
-  rates: FluidRateOption[];
-  selectedId: string | null;
-  onSelect: (rate: FluidRateOption) => void;
+type ShockStatusSelectorProps = {
+  value: ShockStatus | null;
+  onChange: (status: ShockStatus) => void;
 };
 
-export function FluidRateSelector({
-  rates,
-  selectedId,
-  onSelect,
-}: FluidRateSelectorProps) {
+const OPTIONS: { label: string; value: ShockStatus }[] = [
+  { label: "Yes", value: "yes" },
+  { label: "No", value: "no" },
+];
+
+export function ShockStatusSelector({
+  value,
+  onChange,
+}: ShockStatusSelectorProps) {
   const theme = useTheme();
 
   return (
-    <View style={styles.grid}>
-      {rates.map((rate) => {
-        const selected = rate.id === selectedId;
+    <View style={styles.row}>
+      {OPTIONS.map((option) => {
+        const selected = value === option.value;
         return (
           <Pressable
-            key={rate.id}
-            onPress={() => onSelect(rate)}
+            key={option.value}
+            onPress={() => onChange(option.value)}
             style={[
-              styles.chip,
+              styles.option,
               {
                 backgroundColor: selected ? theme.primary : theme.card,
                 borderColor: selected ? theme.primary : theme.border,
@@ -38,7 +41,7 @@ export function FluidRateSelector({
               type="smallBold"
               themeColor={selected ? "primaryText" : "text"}
             >
-              {rate.label}
+              {option.label}
             </ThemedText>
           </Pressable>
         );
@@ -48,15 +51,16 @@ export function FluidRateSelector({
 }
 
 const styles = StyleSheet.create({
-  grid: {
+  row: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
-  chip: {
+
+  option: {
+    flex: 1,
     borderWidth: 1,
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
+    borderRadius: Spacing.three,
+    paddingVertical: Spacing.three,
+    alignItems: "center",
   },
 });

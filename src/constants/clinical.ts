@@ -8,16 +8,18 @@ export const HEIGHT_MAX_CM = 250;
 // CPG Management of Dengue Infection in Adults (3rd Edition), Table 7.
 export const BMI_UNDERWEIGHT_MAX = 18.5; // BMI below this is Underweight
 export const BMI_OVERWEIGHT_MIN = 27.5; // BMI at/above this is Overweight
-// Between the two bounds is Normal. Normal/Underweight use Actual Body
-// Weight for fluid calculation; Overweight uses Adjusted Body Weight (ABW).
+// Between the two bounds is Normal. Normal/Underweight use Adjusted Body
+// Weight (ABW) for fluid calculation; Overweight uses Ideal Body Weight (IBW).
 
+// Ordered lowest to highest rate. `requiresShock` rates only show when
+// Shock Status = Yes.
 export const FLUID_RATES: FluidRateOption[] = [
-  { id: "bolus-20", label: "20 cc/kg", ccPerKg: 20, mode: "bolus", durationLabel: "within 15–30 minutes" },
-  { id: "rate-10", label: "10 cc/kg/hour", ccPerKg: 10, mode: "hourly", durationLabel: "per hour" },
-  { id: "rate-7", label: "7 cc/kg/hour", ccPerKg: 7, mode: "hourly", durationLabel: "per hour" },
-  { id: "rate-5", label: "5 cc/kg/hour", ccPerKg: 5, mode: "hourly", durationLabel: "per hour" },
-  { id: "rate-3", label: "3 cc/kg/hour", ccPerKg: 3, mode: "hourly", durationLabel: "per hour" },
-  { id: "rate-2", label: "2 cc/kg/hour", ccPerKg: 2, mode: "hourly", durationLabel: "per hour" },
-  { id: "rate-1.5", label: "1.5 cc/kg/hour", ccPerKg: 1.5, mode: "hourly", durationLabel: "per hour" },
   { id: "rate-1.2", label: "1.2 cc/kg/hour", ccPerKg: 1.2, mode: "hourly", durationLabel: "per hour" },
+  { id: "rate-1.5", label: "1.5 cc/kg/hour", ccPerKg: 1.5, mode: "hourly", durationLabel: "per hour" },
+  { id: "rate-2", label: "2 cc/kg/hour", ccPerKg: 2, mode: "hourly", durationLabel: "per hour" },
+  { id: "rate-3", label: "3 cc/kg/hour", ccPerKg: 3, mode: "hourly", durationLabel: "per hour" },
+  { id: "rate-5", label: "5 cc/kg/hour", ccPerKg: 5, mode: "hourly", durationLabel: "per hour" },
+  { id: "rate-7", label: "7 cc/kg/hour", ccPerKg: 7, mode: "hourly", durationLabel: "per hour" },
+  { id: "rate-10", label: "10 cc/kg/hour", ccPerKg: 10, mode: "hourly", durationLabel: "per hour", requiresShock: true },
+  { id: "bolus-20", label: "20 cc/kg", ccPerKg: 20, mode: "bolus", durationLabel: "within 15–30 minutes", requiresShock: true },
 ];

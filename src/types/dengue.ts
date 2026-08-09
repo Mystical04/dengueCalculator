@@ -8,8 +8,11 @@ export type FluidRateOption = {
   ccPerKg: number;
   mode: FluidMode;
   durationLabel: string;
+  requiresShock?: boolean;
 };
 
-export type BodyWeightBasis = "actual" | "abw";
+export type BodyWeightBasis = "abw" | "actual";
 
 export type BmiClassification = "underweight" | "normal" | "overweight";
+
+export type ShockStatus = "yes" | "no";

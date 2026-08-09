@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.half,
     borderRadius: Spacing.five,
-    alignSelf: "flex-start",
   },
   label: {
     fontSize: 12,

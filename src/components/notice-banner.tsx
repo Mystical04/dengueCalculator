@@ -19,7 +19,10 @@ export function NoticeBanner({ message }: NoticeBannerProps) {
         { backgroundColor: theme.warningBg, borderColor: theme.warning },
       ]}
     >
-      <ThemedText type="small" style={{ color: theme.warning }}>
+      <ThemedText
+        type="small"
+        style={{ color: theme.warning, textAlign: "center", lineHeight: 22 }}
+      >
         {message}
       </ThemedText>
     </ThemedView>
