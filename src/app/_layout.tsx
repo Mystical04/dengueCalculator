@@ -1,4 +1,8 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
@@ -19,6 +23,8 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="calculator" />
         <Stack.Screen name="results" />
+        <Stack.Screen name="history" />
+        <Stack.Screen name="history-detail" />
       </Stack>
     </ThemeProvider>
   );

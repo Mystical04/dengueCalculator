@@ -8,8 +8,8 @@ export const HEIGHT_MAX_CM = 250;
 // CPG Management of Dengue Infection in Adults (3rd Edition), Table 7.
 export const BMI_UNDERWEIGHT_MAX = 18.5; // BMI below this is Underweight
 export const BMI_OVERWEIGHT_MIN = 27.5; // BMI at/above this is Overweight
-// Between the two bounds is Normal. Normal/Underweight use Adjusted Body
-// Weight (ABW) for fluid calculation; Overweight uses Ideal Body Weight (IBW).
+// Between the two bounds is Normal. Overweight uses Adjusted Body Weight
+// (ABW) for fluid calculation; Normal/Underweight use Actual Body Weight.
 
 // Ordered lowest to highest rate. `requiresShock` rates only show when
 // Shock Status = Yes.

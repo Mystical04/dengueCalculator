@@ -22,17 +22,22 @@ import {
   getFluidBodyWeight,
   roundTo2,
 } from "@/utils/calculations";
+import { saveHistoryRecord } from "@/utils/history-db";
 
 export default function ResultsScreen() {
   const params = useLocalSearchParams<{
     gender: Gender;
     weight: string;
     height: string;
+    name: string;
+    mrn: string;
   }>();
   const [shockStatus, setShockStatus] = useState<ShockStatus | null>(null);
   const [selectedRate, setSelectedRate] = useState<FluidRateOption | null>(
     null,
   );
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const calculation = useMemo(() => {
     const weight = Number(params.weight);
@@ -60,12 +65,42 @@ export default function ResultsScreen() {
   function handleShockStatusChange(status: ShockStatus) {
     setShockStatus(status);
     setSelectedRate(null);
+    setSaved(false);
+  }
+
+  function handleSelectRate(rate: FluidRateOption) {
+    setSelectedRate(rate);
+    setSaved(false);
   }
 
   function handleReset() {
-    setSelectedRate(null);
-    setShockStatus(null);
-    router.replace("/");
+    router.dismissAll();
+    router.push("/calculator");
+  }
+
+  async function handleSaveToHistory() {
+    if (!selectedRate || fluidResult === null || !shockStatus) return;
+    setSaving(true);
+    await saveHistoryRecord({
+      name: params.name,
+      mrn: params.mrn,
+      gender: params.gender,
+      weight: calculation.weight,
+      height: calculation.height,
+      bmi: calculation.bmi,
+      ibw: calculation.ibw,
+      abw: calculation.abw,
+      classification: calculation.classification,
+      basis: calculation.basis,
+      weightKg: calculation.weightKg,
+      shockStatus,
+      fluidRateId: selectedRate.id,
+      fluidRateLabel: selectedRate.label,
+      fluidRateMode: selectedRate.mode,
+      fluidResult,
+    });
+    setSaving(false);
+    setSaved(true);
   }
 
   return (
@@ -73,6 +108,7 @@ export default function ResultsScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <ThemedText type="subtitle">Results</ThemedText>
+
           <ResultCard
             title="Patient Details"
             rows={[
@@ -99,7 +135,9 @@ export default function ResultsScreen() {
             <View style={styles.row}>
               <ThemedText type="default">BMI</ThemedText>
               <View style={styles.bmiValue}>
-                <ThemedText type="smallBold">{roundTo2(calculation.bmi).toFixed(2)} kg/m²</ThemedText>
+                <ThemedText type="smallBold">
+                  {roundTo2(calculation.bmi).toFixed(2)} kg/m²
+                </ThemedText>
                 <BmiBadge classification={calculation.classification} />
               </View>
             </View>
@@ -156,7 +194,7 @@ export default function ResultsScreen() {
               <FluidRateSelector
                 rates={avalaibleRates}
                 selectedId={selectedRate?.id ?? null}
-                onSelect={setSelectedRate}
+                onSelect={handleSelectRate}
               ></FluidRateSelector>
             </ThemedView>
           )}
@@ -171,6 +209,14 @@ export default function ResultsScreen() {
                 },
                 { label: "Duration", value: selectedRate.durationLabel },
               ]}
+            />
+          )}
+
+          {selectedRate && fluidResult !== null && (
+            <PrimaryButton
+              label={saved ? "Saved to History" : saving ? "Saving…" : "Save to History"}
+              onPress={handleSaveToHistory}
+              disabled={saving || saved}
             />
           )}
 

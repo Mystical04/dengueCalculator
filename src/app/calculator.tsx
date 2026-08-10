@@ -1,7 +1,9 @@
+import { Ionicons } from "@expo/vector-icons";
 import { GenderSelector } from "@/components/gender-selector";
 import { NoticeBanner } from "@/components/notice-banner";
 import { NumericField } from "@/components/numeric-field";
 import { PrimaryButton } from "@/components/primary-button";
+import { TextField } from "@/components/text-field";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
@@ -11,10 +13,11 @@ import {
   WEIGHT_MIN_KG,
 } from "@/constants/clinical";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { Gender } from "@/types/dengue";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 function validateWeight(value: string): string | undefined {
@@ -38,27 +41,74 @@ function validateHeight(value: string): string | undefined {
 }
 
 export default function CalculatorScreen() {
+  const theme = useTheme();
   const [gender, setGender] = useState<Gender | null>(null);
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
+  const [name, setName] = useState("");
+  const [mrn, setMrn] = useState("");
   const [touched, setTouched] = useState(false);
 
+  const nameError = touched ? validateName(name) : undefined;
+  const mrnError = touched ? validateMrn(mrn) : undefined;
   const weightError = touched ? validateWeight(weight) : undefined;
   const heightError = touched ? validateHeight(height) : undefined;
   const genderError = touched && !gender ? "Select a gender." : undefined;
 
   function handleCalculate() {
     setTouched(true);
-    if (!gender || validateWeight(weight) || validateHeight(height)) return;
-    router.push({ pathname: "/results", params: { gender, weight, height } });
+    if (
+      !gender ||
+      validateName(name) ||
+      validateMrn(mrn) ||
+      validateWeight(weight) ||
+      validateHeight(height)
+    )
+      return;
+    router.push({
+      pathname: "/results",
+      params: { gender, weight, height, name, mrn },
+    });
+  }
+
+  function validateName(value: string): string | undefined {
+    if (!value.trim()) return "Patient name is required.";
+    return undefined;
+  }
+
+  function validateMrn(value: string): string | undefined {
+    if (!value.trim()) return "MRN is required.";
+    return undefined;
   }
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <ThemedText type="subtitle">Patient Information</ThemedText>
+          <View style={styles.headerRow}>
+            <ThemedText type="subtitle">Patient Information</ThemedText>
+            <Pressable onPress={() => router.push("/history")} hitSlop={8}>
+              <Ionicons name="time-outline" size={24} color={theme.primary} />
+            </Pressable>
+          </View>
           <NoticeBanner message="Please double-check the measurements before proceeding. Accurate height and weight are essential for a correct calculation."></NoticeBanner>
+
+          <TextField
+            label="Patient Name"
+            value={name}
+            onChangeText={setName}
+            error={nameError}
+            placeholder="e.g. Ahmad bin Ali"
+          />
+          <TextField
+            label="MRN"
+            value={mrn}
+            onChangeText={setMrn}
+            error={mrnError}
+            placeholder="e.g. A123456"
+            autoCapitalize="characters"
+          />
+
           <ThemedView style={styles.section}>
             <ThemedText type="smallBold">Gender</ThemedText>
             <GenderSelector
@@ -109,5 +159,10 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   scrollContent: { padding: Spacing.five, gap: Spacing.four },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   section: { gap: Spacing.two },
 });
