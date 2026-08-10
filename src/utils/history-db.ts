@@ -7,7 +7,7 @@ import {
 } from "@/constants/storage";
 import { HistoryRecord } from "@/types/dengue";
 import * as Crypto from "expo-crypto";
-import { decryptField, encryptField } from "./crpto";
+import { decryptField, encryptField } from "./crypto";
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
