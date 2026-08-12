@@ -1,15 +1,43 @@
 import * as SQLite from "expo-sqlite";
 
 import {
-    DATABASE_NAME,
-    HISTORY_RETENTION_DAYS,
-    HISTORY_TABLE,
+  DATABASE_NAME,
+  HISTORY_RETENTION_DAYS,
+  HISTORY_TABLE,
 } from "@/constants/storage";
-import { HistoryRecord } from "@/types/dengue";
+import {
+  HistoryRecord,
+  PatientGroup,
+  PatientSummary,
+} from "@/types/dengue";
 import * as Crypto from "expo-crypto";
 import { decryptField, encryptField } from "./crypto";
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
+export function groupHistoryRecordsByPatient(
+  records: HistoryRecord[],
+): PatientGroup[] {
+  const groups = new Map<string, HistoryRecord[]>();
+
+  for (const record of records) {
+    const key = record.mrn.trim();
+    const existing = groups.get(key);
+    if (existing) {
+      existing.push(record);
+    } else {
+      groups.set(key, [record]);
+    }
+  }
+
+  return Array.from(groups.values())
+    .map((groupRecords) => {
+      const sorted = [...groupRecords].sort(
+        (a, b) => b.createdAt - a.createdAt,
+      );
+      return { mrn: sorted[0].mrn, name: sorted[0].name, records: sorted };
+    })
+    .sort((a, b) => b.records[0].createdAt - a.records[0].createdAt);
+}
 
 function getDb() {
   if (!dbPromise) {
@@ -135,4 +163,26 @@ export async function purgeExpiredHistoryRecords(): Promise<void> {
   await db.runAsync(`DELETE FROM ${HISTORY_TABLE} WHERE createdAt <? `, [
     cutoff,
   ]);
+}
+
+export async function hasHistoryRecords(): Promise<boolean> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) as count FROM ${HISTORY_TABLE}`,
+  );
+  return (row?.count ?? 0) > 0;
+}
+
+export async function getPatientList(): Promise<PatientSummary[]> {
+  const records = await getAllHistoryRecords();
+  return groupHistoryRecordsByPatient(records).map((group) => {
+    const latest = group.records[0]; // newest first, per groupHistoryRecordsByPatient
+    return {
+      name: group.name,
+      mrn: group.mrn,
+      gender: latest.gender,
+      weight: latest.weight,
+      height: latest.height,
+    };
+  });
 }

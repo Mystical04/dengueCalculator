@@ -5,7 +5,8 @@ import { FlatList, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BiometricGate } from "@/components/biometric-gate";
-import { HistoryListItem } from "@/components/history-list-item";
+import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
+import { PatientGroupCard } from "@/components/patient-group-card";
 import { PrimaryButton } from "@/components/primary-button";
 import { TextField } from "@/components/text-field";
 import { ThemedText } from "@/components/themed-text";
@@ -13,14 +14,17 @@ import { ThemedView } from "@/components/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { HistoryRecord } from "@/types/dengue";
 import {
-    getAllHistoryRecords,
-    purgeExpiredHistoryRecords,
+  deleteHistoryRecord,
+  getAllHistoryRecords,
+  groupHistoryRecordsByPatient,
+  purgeExpiredHistoryRecords,
 } from "@/utils/history-db";
 
 export default function HistoryScreen() {
   const [records, setRecords] = useState<HistoryRecord[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const loadRecords = useCallback(async () => {
     setLoading(true);
@@ -45,6 +49,18 @@ export default function HistoryScreen() {
     );
   }, [records, query]);
 
+  const groups = useMemo(
+    () => groupHistoryRecordsByPatient(filteredRecords),
+    [filteredRecords],
+  );
+
+  async function confirmDelete() {
+    if (!pendingDeleteId) return;
+    await deleteHistoryRecord(pendingDeleteId);
+    setPendingDeleteId(null);
+    loadRecords();
+  }
+
   return (
     <BiometricGate>
       <ThemedView style={styles.container}>
@@ -57,12 +73,12 @@ export default function HistoryScreen() {
               onChangeText={setQuery}
               placeholder="Search by name or MRN"
               autoCapitalize="none"
-            ></TextField>
+            />
           </ThemedView>
 
           <FlatList
-            data={filteredRecords}
-            keyExtractor={(item) => item.id}
+            data={groups}
+            keyExtractor={(item) => item.mrn}
             contentContainerStyle={styles.listContent}
             ListEmptyComponent={
               !loading ? (
@@ -76,23 +92,25 @@ export default function HistoryScreen() {
               ) : null
             }
             renderItem={({ item }) => (
-              <HistoryListItem
-                record={item}
-                onPress={() =>
-                  router.push({
-                    pathname: "/history-detail",
-                    params: { id: item.id },
-                  })
-                }
-              ></HistoryListItem>
+              <PatientGroupCard
+                group={item}
+                onDeleteRecord={setPendingDeleteId}
+              />
             )}
-          ></FlatList>
+          />
+
           <PrimaryButton
             label="Back"
             variant="secondary"
             onPress={() => router.back()}
           />
         </SafeAreaView>
+
+        <DeleteConfirmModal
+          visible={pendingDeleteId !== null}
+          onCancel={() => setPendingDeleteId(null)}
+          onConfirm={confirmDelete}
+        />
       </ThemedView>
     </BiometricGate>
   );

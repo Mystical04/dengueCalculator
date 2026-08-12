@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BmiBadge } from "@/components/bmi-badge";
 import { FluidRateSelector } from "@/components/fluid-rate-selector";
+import { PatientIdentityModal } from "@/components/patient-identity-modals";
 import { PrimaryButton } from "@/components/primary-button";
 import { ResultCard } from "@/components/result-card";
 import { ShockStatusSelector } from "@/components/shock-status-selector";
@@ -38,6 +39,9 @@ export default function ResultsScreen() {
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [patientName, setPatientName] = useState(params.name ?? "");
+  const [patientMrn, setPatientMrn] = useState(params.mrn ?? "");
+  const [identityModalVisible, setIdentityModalVisible] = useState(false);
 
   const calculation = useMemo(() => {
     const weight = Number(params.weight);
@@ -53,7 +57,7 @@ export default function ResultsScreen() {
     return { weight, height, bmi, ibw, abw, classification, weightKg, basis };
   }, [params.weight, params.height, params.gender]);
 
-  const avalaibleRates = useMemo(
+  const availableRates = useMemo(
     () => (shockStatus ? getAvailableFluidRates(shockStatus) : []),
     [shockStatus],
   );
@@ -78,12 +82,12 @@ export default function ResultsScreen() {
     router.push("/calculator");
   }
 
-  async function handleSaveToHistory() {
+  async function persistRecord(name: string, mrn: string) {
     if (!selectedRate || fluidResult === null || !shockStatus) return;
     setSaving(true);
     await saveHistoryRecord({
-      name: params.name,
-      mrn: params.mrn,
+      name,
+      mrn,
       gender: params.gender,
       weight: calculation.weight,
       height: calculation.height,
@@ -99,8 +103,23 @@ export default function ResultsScreen() {
       fluidRateMode: selectedRate.mode,
       fluidResult,
     });
+    setPatientName(name);
+    setPatientMrn(mrn);
     setSaving(false);
     setSaved(true);
+  }
+
+  function handleSaveToHistory() {
+    if (!patientName.trim() || !patientMrn.trim()) {
+      setIdentityModalVisible(true);
+      return;
+    }
+    persistRecord(patientName, patientMrn);
+  }
+
+  function handleIdentitySubmit(name: string, mrn: string) {
+    setIdentityModalVisible(false);
+    persistRecord(name, mrn);
   }
 
   return (
@@ -121,7 +140,7 @@ export default function ResultsScreen() {
                 value: `${roundTo2(calculation.height).toFixed(2)} cm`,
               },
             ]}
-          ></ResultCard>
+          />
 
           <ThemedView type="card" style={styles.card}>
             <ThemedText
@@ -185,17 +204,17 @@ export default function ResultsScreen() {
             <ShockStatusSelector
               value={shockStatus}
               onChange={handleShockStatusChange}
-            ></ShockStatusSelector>
+            />
           </ThemedView>
 
           {shockStatus && (
             <ThemedView style={styles.section}>
               <ThemedText type="smallBold">Select Fluid Rate</ThemedText>
               <FluidRateSelector
-                rates={avalaibleRates}
+                rates={availableRates}
                 selectedId={selectedRate?.id ?? null}
                 onSelect={handleSelectRate}
-              ></FluidRateSelector>
+              />
             </ThemedView>
           )}
 
@@ -214,7 +233,13 @@ export default function ResultsScreen() {
 
           {selectedRate && fluidResult !== null && (
             <PrimaryButton
-              label={saved ? "Saved to History" : saving ? "Saving…" : "Save to History"}
+              label={
+                saved
+                  ? "Saved to History"
+                  : saving
+                    ? "Saving…"
+                    : "Save to History"
+              }
               onPress={handleSaveToHistory}
               disabled={saving || saved}
             />
@@ -224,9 +249,17 @@ export default function ResultsScreen() {
             label="Reset"
             variant="secondary"
             onPress={handleReset}
-          ></PrimaryButton>
+          />
         </ScrollView>
       </SafeAreaView>
+
+      <PatientIdentityModal
+        visible={identityModalVisible}
+        initialName={patientName}
+        initialMrn={patientMrn}
+        onCancel={() => setIdentityModalVisible(false)}
+        onSubmit={handleIdentitySubmit}
+      />
     </ThemedView>
   );
 }
@@ -252,10 +285,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  bmiValue: {
-    alignItems: "flex-end",
-    gap: Spacing.one,
-  },
+  bmiValue: { alignItems: "flex-end", gap: Spacing.one },
   centerText: { textAlign: "center" },
   resultValue: { textAlign: "center", fontSize: 20, lineHeight: 26 },
 });

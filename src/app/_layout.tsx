@@ -25,6 +25,8 @@ export default function RootLayout() {
         <Stack.Screen name="results" />
         <Stack.Screen name="history" />
         <Stack.Screen name="history-detail" />
+        <Stack.Screen name="patient-history" />
+        <Stack.Screen name="new-regime" />
       </Stack>
     </ThemeProvider>
   );

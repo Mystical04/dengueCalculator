@@ -25,6 +25,11 @@ export default function HomeScreen() {
             label="Start Calculation"
             onPress={() => router.push("/calculator")}
           ></PrimaryButton>
+          <PrimaryButton
+            label="View History"
+            variant="secondary"
+            onPress={() => router.push("/history")}
+          />
           <ThemedText
             type="small"
             themeColor="textSecondary"

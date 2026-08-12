@@ -40,3 +40,15 @@ export type HistoryRecord = PatientIdentity & {
   fluidRateMode: FluidMode;
   fluidResult: number;
 };
+
+export type PatientGroup = {
+  mrn: string;
+  name: string;
+  records: HistoryRecord[];
+};
+
+export type PatientSummary = PatientIdentity & {
+  gender: Gender;
+  weight: number;
+  height: number;
+};

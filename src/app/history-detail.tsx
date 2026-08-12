@@ -4,6 +4,8 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BmiBadge } from "@/components/bmi-badge";
+import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
+import { DeleteIconButton } from "@/components/delete-icon-button";
 import { PrimaryButton } from "@/components/primary-button";
 import { ResultCard } from "@/components/result-card";
 import { ThemedText } from "@/components/themed-text";
@@ -17,6 +19,7 @@ export default function HistoryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [record, setRecord] = useState<HistoryRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -28,9 +31,10 @@ export default function HistoryDetailScreen() {
     load();
   }, [load]);
 
-  async function handleDelete() {
+  async function handleConfirmDelete() {
     if (!id) return;
     await deleteHistoryRecord(id);
+    setConfirmVisible(false);
     router.back();
   }
 
@@ -57,7 +61,10 @@ export default function HistoryDetailScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <ThemedText type="subtitle">Record Detail</ThemedText>
+          <View style={styles.headerRow}>
+            <ThemedText type="subtitle">Record Detail</ThemedText>
+            <DeleteIconButton onPress={() => setConfirmVisible(true)} />
+          </View>
 
           <ResultCard
             title="Patient"
@@ -142,13 +149,14 @@ export default function HistoryDetailScreen() {
             variant="secondary"
             onPress={() => router.back()}
           />
-          <PrimaryButton
-            label="Delete Record"
-            variant="secondary"
-            onPress={handleDelete}
-          />
         </ScrollView>
       </SafeAreaView>
+
+      <DeleteConfirmModal
+        visible={confirmVisible}
+        onCancel={() => setConfirmVisible(false)}
+        onConfirm={handleConfirmDelete}
+      />
     </ThemedView>
   );
 }
@@ -162,6 +170,11 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   scrollContent: { padding: Spacing.five, gap: Spacing.four },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   card: {
     borderRadius: Spacing.four,
     padding: Spacing.four,

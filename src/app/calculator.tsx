@@ -1,8 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import { GenderSelector } from "@/components/gender-selector";
 import { NoticeBanner } from "@/components/notice-banner";
 import { NumericField } from "@/components/numeric-field";
+import { PatientPickerModal } from "@/components/patient-picker-modal";
 import { PrimaryButton } from "@/components/primary-button";
+import { SelectPatientField } from "@/components/select-patient-field";
 import { TextField } from "@/components/text-field";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -14,9 +15,13 @@ import {
 } from "@/constants/clinical";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
-import { Gender } from "@/types/dengue";
+import { Gender, PatientSummary } from "@/types/dengue";
+import { authenticateDevice } from "@/utils/biometric";
+import { getPatientList, hasHistoryRecords } from "@/utils/history-db";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -48,37 +53,43 @@ export default function CalculatorScreen() {
   const [name, setName] = useState("");
   const [mrn, setMrn] = useState("");
   const [touched, setTouched] = useState(false);
+  const [hasHistory, setHasHistory] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [patients, setPatients] = useState<PatientSummary[]>([]);
 
-  const nameError = touched ? validateName(name) : undefined;
-  const mrnError = touched ? validateMrn(mrn) : undefined;
   const weightError = touched ? validateWeight(weight) : undefined;
   const heightError = touched ? validateHeight(height) : undefined;
   const genderError = touched && !gender ? "Select a gender." : undefined;
 
+  useFocusEffect(
+    useCallback(() => {
+      hasHistoryRecords().then(setHasHistory);
+    }, []),
+  );
+
+  async function handleSelectPatientPress() {
+    const result = await authenticateDevice("Unlock to select a patient");
+    if (result === "failed") return;
+    setPatients(await getPatientList());
+    setPickerVisible(true);
+  }
+
+  function handlePatientSelected(patient: PatientSummary) {
+    setName(patient.name);
+    setMrn(patient.mrn);
+    setGender(patient.gender);
+    setWeight(String(patient.weight));
+    setHeight(String(patient.height));
+    setPickerVisible(false);
+  }
+
   function handleCalculate() {
     setTouched(true);
-    if (
-      !gender ||
-      validateName(name) ||
-      validateMrn(mrn) ||
-      validateWeight(weight) ||
-      validateHeight(height)
-    )
-      return;
+    if (!gender || validateWeight(weight) || validateHeight(height)) return;
     router.push({
       pathname: "/results",
       params: { gender, weight, height, name, mrn },
     });
-  }
-
-  function validateName(value: string): string | undefined {
-    if (!value.trim()) return "Patient name is required.";
-    return undefined;
-  }
-
-  function validateMrn(value: string): string | undefined {
-    if (!value.trim()) return "MRN is required.";
-    return undefined;
   }
 
   return (
@@ -93,18 +104,18 @@ export default function CalculatorScreen() {
           </View>
           <NoticeBanner message="Please double-check the measurements before proceeding. Accurate height and weight are essential for a correct calculation."></NoticeBanner>
 
+          <SelectPatientField disabled={!hasHistory} onPress={handleSelectPatientPress} />
+
           <TextField
             label="Patient Name"
             value={name}
             onChangeText={setName}
-            error={nameError}
             placeholder="e.g. Ahmad bin Ali"
           />
           <TextField
             label="MRN"
             value={mrn}
             onChangeText={setMrn}
-            error={mrnError}
             placeholder="e.g. A123456"
             autoCapitalize="characters"
           />
@@ -146,6 +157,13 @@ export default function CalculatorScreen() {
           ></PrimaryButton>
         </ScrollView>
       </SafeAreaView>
+
+      <PatientPickerModal
+        visible={pickerVisible}
+        patients={patients}
+        onSelect={handlePatientSelected}
+        onCancel={() => setPickerVisible(false)}
+      />
     </ThemedView>
   );
 }
